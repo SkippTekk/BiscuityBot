@@ -1,4 +1,4 @@
-const { Client, Collection, MessageEmbed } = require("discord.js");
+const { Client, Collection, MessageEmbed, message } = require("discord.js");
 const { config } = require("dotenv");
 const fs = require("fs")
 const botconfig = require("./botconfig.json")
@@ -81,11 +81,11 @@ client.on("guildMemberRemove", async member =>{
 
 //channel creations and removal
 client.on("channelCreate", async channel =>{
-    let channelCreate = channel.guild.channels.cache.get(`${process.env.reports}`)
+    let channelCreate = channel.guild.channels.cache.get(process.env.reports)
     channelCreate.send(`${channel} has been created`)
 })
 client.on("channelDelete", async channel =>{
-    let channelDelete = channel.guild.channels.cache.get(`${process.env.reports}`)
+    let channelDelete = channel.guild.channels.cache.get(process.env.reports)
     channelDelete.send(`channel: **${channel.name}** was deleted.`)
 })
 // message changes
@@ -94,10 +94,11 @@ client.on("messageUpdate", async(oldMessage, newMessage) => {
         return;
     }
         let logEmbed = new MessageEmbed()
-    .setTitle("Edited Message.")
+    .setTitle(`Message Edited`)
     .setColor("GREEN")
-    .addField("●**Old Message:**", `${oldMessage.content}`)
-    .addField("●**New Message:**", `${newMessage.content}`)
+    .addField(`Message information `, `●**Old Message:** ${oldMessage.content}
+    ●**New Message:** ${newMessage.content}
+    ●[Jump to message](${oldMessage.url})`, true)
     .setTimestamp()
     .setFooter(process.env.footer)
     let loggingChannel = newMessage.guild.channels.cache.get(process.env.botlogs)

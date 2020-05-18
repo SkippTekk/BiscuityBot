@@ -11,3 +11,4 @@ npm i [ms](https://www.npmjs.com/package/ms) --save
 npm i [os](https://www.npmjs.com/package/os) --save
 npm i [acsii-table](https://www.npmjs.com/package/ascii-table) --save
 npm i [dotenv](https://www.npmjs.com/package/dotenv) --save
+npm i [common-tags](https://www.npmjs.com/packages/common-tags) --save

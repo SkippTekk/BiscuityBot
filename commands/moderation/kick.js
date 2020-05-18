@@ -1,36 +1,94 @@
-const { prefix } = require("dotenv");
 const { Discord, MessageEmbed } = require("discord.js");
+const { stripIndents } = require("common-tags");
+const { promptMessage } = require("../../functions.js");
+
 module.exports = {
     name: "kick",
-    aliases: ["boot"],
-    category: "moderation",
+    aliases: [],
+    category: "info",
     description: "Kicks the user from the discord.",
     usage: `${process.env.prefix}kick`,
     run: async (client, message, args) => {
-        if (message.deletable) message.delete();
-    let kUser = message.guild.member(message.mentions.users.first() || message.guild.members.cache.get(args[0]));
-    if(!message.member.hasPermission('MANAGE_MESSAGES')) return message.channel.send("Error. Permissions are a 404.").then(m => m.delete({timeout: 15000}));
-    if(!kUser.kickable) return message.channel.send("Can't kick the user...").then(m => m.delete({timeout: 15000}));
+        const logChannel = message.guild.channels.cache.get(`${process.env.removereports}`) || message.channel;
 
+        if(message.deletable) message.delete()
 
-    if(!kUser) return message.channel.send("Shooting blanks here...").then(m => m.delete({timeout: 15000}));
-    if(!args[1])
-        return message.channel.send(`Invalid reason, try again ${message.author.username}`).then(m => m.delete({timeout: 15000}));
-    let kreason = args.join(" ").slice(22);
+        //no user defined
+        if(!args[0]) {
+            return message.reply("Gotta tell me who to kick.")
+                .then (m => m.delete({timeout: 5000}));
+        }
+        //no reason defined
+        if(!args[1]) {
+            return message.reply("Ok, what's the reason?.")
+                .then (m => m.delete({timeout: 5000}));
+        }
+        //not allowed to kick
+        if(!message.member.hasPermission("KICK_MEMBERS")) {
+            return message.reply("Oi, you got no perms for this. Bugger off.")
+                .then (m => m.delete({timeout: 5000}));
+        }
+        //no bot permissions
+        if(!message.guild.me.hasPermission("KICK_MEMBERS")) {
+            return message.reply("Oi, I got no perms for this. Please give me.")
+                .then (m => m.delete({timeout: 5000}));
+        }
 
-    let kchannel = message.guild.channels.cache.get(`${incidents}`)
-    if(!kchannel)
-        return message.channel.send(`Can't find the channel ${incidents}`).then(m => m.delete({timeout: 15000}));
+        const toKick = message.mentions.members.first() || message.guild.members.cache.get(args[0])
+        
+        //no user defined
+        if(!toKick) {
+            return message.reply("Either i'm drunk, or i can't find the person *hic*")
+                .then (m => m.delete({timeout: 5000}));
+        }
 
-    let kickembed = new MessageEmbed()
-    .setDescription("~Lah boot~")
-    .setColor("#e56b00")
-    .addField("Kicked user", kUser.user.tag)
-    .addField("Kicked by", `<@${message.author.id}>`)
-    .addField("Time", message.createdAt)
-    .addField("Reason", kreason)
-    .setTimestamp();
-    message.guild.member(kUser).kick(kreason);
-    return kchannel.send(kickembed);
+        //can't kick yourself
+        //no user defined
+        if(!message.author.id === toKick.id) {
+            return message.reply("My boot is not effective, your butt must be made of steel.")
+                .then (m => m.delete({timeout: 5000}));
+        }
+
+        //kicking the person
+        if(!toKick.kickable) {
+            return message.reply("I can't kick someone that is higher then me bro... *hic*")
+                .then (m => m.delete({timeout: 5000}));
+        }
+        const embed = new MessageEmbed()
+            .setColor("#ff0000")
+            .setThumbnail(toKick.user.displayAvatarURL())
+            .setFooter(message.member.displayName, message.author.displayAvatarURL())
+            .setTimestamp()
+            .setDescription(stripIndents`●**Kicked member:** ${toKick} (${toKick.id})
+            ●**Kicked by:** ${message.member} (${message.member.id})
+            ●**Reason:** ${args.slice(1).join(" ")}`);
+
+        const promptEmbed = new MessageEmbed()
+            .setColor("GREEN")
+            .setAuthor(`This verification becomes invalid after 10s.`)
+            .setDescription(`Do you want to kick ${toKick}?`)
+
+        // Send the message
+        await message.channel.send(promptEmbed).then(async msg => {
+            // Await the reactions and the reaction collector
+            const emoji = await promptMessage(msg, message.author, 10, ["✅", "❌"]);
+
+            // The verification stuffs
+            if (emoji === "✅") {
+                msg.delete();
+
+                toKick.kick(args.slice(1).join(" "))
+                    .catch(err => {
+                        if (err) return message.channel.send(`WHelp, I ran into an error *hic* ${err}`)
+                    });
+
+                logChannel.send(embed);
+            } else if (emoji === "❌") {
+                msg.delete();
+
+                message.reply(`Kick canceled.`)
+                    .then(m => m.delete({timeout: 10000}));
+            }
+        });
     }
 }
