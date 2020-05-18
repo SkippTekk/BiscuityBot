@@ -1,0 +1,12 @@
+const { Discord, MessageEmbed } = require("discord.js");
+
+module.exports = {
+    name: "",
+    aliases: [],
+    category: "info",
+    description: "",
+    usage: `${process.env.prefix}uptime`,
+    run: async (client, message, args) => {
+        //shit goes here
+    }
+}
