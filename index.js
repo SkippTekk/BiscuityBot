@@ -1,7 +1,8 @@
 const { Client, Collection, MessageEmbed, message } = require("discord.js");
 const { config } = require("dotenv");
-const fs = require("fs")
-const botconfig = require("./botconfig.json")
+const fs = require("fs");
+const botconfig = require("./botconfig.json");
+const mongoose = require("mongoose");
 
 const client = new Client({
     disableEveryone: true
@@ -9,6 +10,7 @@ const client = new Client({
 
 client.commands = new Collection();
 client.aliases = new Collection();
+client.mongoose = require("./utils/mongoose")
 
 client.categories = fs.readdirSync("./commands/");
 
@@ -71,11 +73,11 @@ client.on("message", async message =>{
 //welcome and leave
 
 client.on("guildMemberAdd", async member =>{
-    let welcomechannel = member.guild.channels.find(`name`, "welcome-leave");
+    let welcomechannel = member.guild.channels.cache.find(`name`, "welcome-leave");
     welcomechannel.send(`Welcome to the ${message.guild.name} discord, Be sure to read the left side for the rules ${member}`)
 })
 client.on("guildMemberRemove", async member =>{
-    let welcomechannel = member.guild.channels.find(`name`, "welcome-leave");
+    let welcomechannel = member.guild.channels.cache.find(`name`, "welcome-leave");
     welcomechannel.send(`Whelp, ${member} didn't like being in ${message.guild.name}. How sad.`)
 })
 
@@ -124,6 +126,21 @@ client.on('messageDelete', message =>{
         }
     }
 })
+//events loading
+fs.readdir('./events/', (err, files) =>{
+    if (err) return console.error;
+    files.forEach(file => {
+        if(!file.endsWith('.js'))return;
+        const evt = require(`./events/${file}`);
+        let evtName = file.split('.')[0];
+        console.log(`loading '${evtName}'`);
+        client.on(evtName, evt.bind(null, client));
+    });
+});
 
 
+
+
+
+client.mongoose.init();
 client.login(process.env.TOKEN);

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "discord.js": "^12.2.0"
+    "discord.js": "^12.2.0",
+    "mongoose": "^5.9.15"
   },
   "devDependencies": {
     "ascii-table": "0.0.9",
